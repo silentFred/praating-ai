@@ -28,7 +28,7 @@ def load_config():
     defaults = {
         "mode": "push_to_talk",
         "mouse_button": "button9",
-        "model_size": "medium",
+        "model_size": "large-v3",
         "device": "cuda",
         "compute_type": "float32",
         "silence_threshold": 0.01,
@@ -230,8 +230,11 @@ class Dictation:
         """Type text at current cursor position using xdotool."""
         try:
             # Apply text transformations
-            if CAPITALIZE_FIRST and text:
-                text = text[0].upper() + text[1:]
+            if text:
+                if CAPITALIZE_FIRST:
+                    text = text[0].upper() + text[1:]
+                else:
+                    text = text[0].lower() + text[1:]
             if ADD_TRAILING_SPACE:
                 text += " "
             if ADD_NEWLINE:

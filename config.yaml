@@ -3,7 +3,7 @@
 # Input settings
 mode: push_to_talk          # push_to_talk (hold button) or continuous (always listening)
 mouse_button: button9       # Mouse button for push-to-talk (button8, button9, left, right, middle)
-model_size: medium          # Whisper model: tiny, base, small, medium, large-v3
+model_size: large-v3        # Whisper model: tiny, base, small, medium, large-v3
 device: cuda                # cuda (GPU) or cpu
 compute_type: float32       # float32, float16, int8
 
@@ -15,4 +15,4 @@ silence_duration: 1.5       # Seconds of silence before processing speech
 add_trailing_space: true    # Add a space after transcribed text
 add_newline: false          # Add a newline after transcribed text
 press_enter: true           # Press Enter key after transcribing (useful for chat apps)
-capitalize_first: true      # Capitalize first letter of transcription
+capitalize_first: false      # Capitalize first letter of transcription
