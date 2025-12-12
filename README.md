@@ -2,9 +2,9 @@
 
 Push-to-talk voice dictation for Linux. Hold a button, speak, release — text appears at your cursor.
 
-Built for use with Claude Code, terminals, text editors, and other text application.
+Built for use with Claude Code, terminals, text editors, and any application.
 
-## Quick Start
+## Installation
 
 ### 1. Install system dependencies
 
@@ -12,21 +12,37 @@ Built for use with Claude Code, terminals, text editors, and other text applicat
 sudo apt install xdotool portaudio19-dev libasound2-dev
 ```
 
-### 2. Install Python dependencies
+### 2. Install praating-ai
 
+**With GPU support (recommended):**
 ```bash
-pip install -r requirements.txt
+pip install praating-ai[cuda]
+```
+
+**CPU only:**
+```bash
+pip install praating-ai
+```
+
+Or install from GitHub:
+```bash
+pip install git+https://github.com/silentFred/praating-ai.git
 ```
 
 ### 3. Run
 
 ```bash
-./run.sh
+praating
 ```
 
-First run downloads the Whisper model (~1.5GB). Subsequent starts are fast.
+First run downloads the Whisper model (~3GB for large-v3). Subsequent starts are fast.
 
-### 4. Use it
+> **Note:** For GPU acceleration, use the wrapper script which sets up CUDA library paths:
+> ```bash
+> ./run.sh
+> ```
+
+## Usage
 
 **Hold your mouse button (default: button9) while speaking, release to transcribe.**
 
@@ -34,13 +50,13 @@ Text is typed wherever your cursor is focused.
 
 ## Configuration
 
-Edit `config.yaml` to customize:
+Create `~/.config/praating-ai/config.yaml` to customize:
 
 ```yaml
 # Input settings
 mode: push_to_talk          # push_to_talk or continuous
-mouse_button: button9       # button8, button9, left, right, middle (push_to_talk mode)
-model_size: medium          # tiny, base, small, medium, large-v3
+mouse_button: button9       # button8, button9, left, right, middle
+model_size: large-v3        # tiny, base, small, medium, large-v3
 device: cuda                # cuda (GPU) or cpu
 compute_type: float32       # float32, float16, int8
 
@@ -61,8 +77,6 @@ capitalize_first: true      # Capitalize first letter of transcription
 - **continuous**: Always listening, automatically detects speech and transcribes when you pause
 
 ### Finding your mouse button
-
-Run this to detect which button number your mouse uses:
 
 ```bash
 python3 -c "from pynput import mouse
@@ -88,12 +102,12 @@ with mouse.Listener(on_click=lambda x,y,b,p: print(b) or not p) as l: l.join()"
 ## Troubleshooting
 
 ### No GPU acceleration
-Make sure CUDA libraries are loaded via `run.sh`. Running `python dictate.py` directly may not find them.
+Make sure CUDA libraries are loaded. Use `./run.sh` or set `LD_LIBRARY_PATH` to include the nvidia cudnn/cublas lib directories.
 
 ### Text not appearing
-- Ensure xdotool is installed
-- Check you're using X11 (not Wayland): `echo $XDG_SESSION_TYPE`
+- Ensure xdotool is installed: `sudo apt install xdotool`
+- Check you're using X11: `echo $XDG_SESSION_TYPE`
 - For Wayland, you'd need to use `ydotool` or `wtype` instead
 
 ### Wrong mouse button
-Use the detection snippet above to find your button, then update `MOUSE_BUTTON` in `dictate.py`.
+Use the detection snippet above to find your button, then update `mouse_button` in your config.

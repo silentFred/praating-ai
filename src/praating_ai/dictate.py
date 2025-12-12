@@ -5,10 +5,42 @@ Praating-AI: Push-to-talk voice dictation tool.
 Hold mouse button while speaking, release to transcribe.
 Text is typed at the current cursor position.
 """
+import os
 import subprocess
 import threading
 import queue
+import ctypes
 from pathlib import Path
+
+# Set up CUDA library paths BEFORE importing GPU libraries
+def _setup_cuda_paths():
+    """Configure LD_LIBRARY_PATH for CUDA libraries installed via pip."""
+    try:
+        import nvidia.cudnn
+        import nvidia.cublas
+
+        # Get library paths
+        cudnn_path = getattr(nvidia.cudnn, '__path__', None)
+        cublas_path = getattr(nvidia.cublas, '__path__', None)
+
+        if cudnn_path:
+            cudnn_path = os.path.join(cudnn_path[0], "lib")
+        if cublas_path:
+            cublas_path = os.path.join(cublas_path[0], "lib")
+
+        # Load the libraries directly using ctypes
+        for lib_path in [cudnn_path, cublas_path]:
+            if lib_path and os.path.isdir(lib_path):
+                for lib_file in sorted(os.listdir(lib_path)):
+                    if lib_file.endswith('.so') or '.so.' in lib_file:
+                        try:
+                            ctypes.CDLL(os.path.join(lib_path, lib_file), mode=ctypes.RTLD_GLOBAL)
+                        except OSError:
+                            pass  # Some libs may have missing deps, that's ok
+    except ImportError:
+        pass  # CUDA libs not installed, will use CPU
+
+_setup_cuda_paths()
 
 import yaml
 import numpy as np
@@ -17,14 +49,19 @@ from pynput import mouse
 from faster_whisper import WhisperModel
 
 # Paths
-SCRIPT_DIR = Path(__file__).parent
-CONFIG_FILE = SCRIPT_DIR / "config.yaml"
-SOUND_START = SCRIPT_DIR / "sounds" / "start.wav"
-SOUND_STOP = SCRIPT_DIR / "sounds" / "stop.wav"
+PACKAGE_DIR = Path(__file__).parent
+USER_CONFIG_DIR = Path.home() / ".config" / "praating-ai"
+USER_CONFIG_FILE = USER_CONFIG_DIR / "config.yaml"
+DEFAULT_CONFIG_FILE = PACKAGE_DIR / "config.yaml"
+SOUND_START = PACKAGE_DIR / "sounds" / "start.wav"
+SOUND_STOP = PACKAGE_DIR / "sounds" / "stop.wav"
 
 # Load configuration
 def load_config():
-    """Load configuration from YAML file."""
+    """Load configuration from YAML file.
+
+    Checks ~/.config/praating-ai/config.yaml first, falls back to package default.
+    """
     defaults = {
         "mode": "push_to_talk",
         "mouse_button": "button9",
@@ -39,8 +76,11 @@ def load_config():
         "capitalize_first": True,
     }
 
-    if CONFIG_FILE.exists():
-        with open(CONFIG_FILE) as f:
+    # Check user config first, then package default
+    config_file = USER_CONFIG_FILE if USER_CONFIG_FILE.exists() else DEFAULT_CONFIG_FILE
+
+    if config_file.exists():
+        with open(config_file) as f:
             user_config = yaml.safe_load(f) or {}
             defaults.update(user_config)
 
