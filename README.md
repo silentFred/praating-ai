@@ -29,7 +29,15 @@ Or install from GitHub:
 pip install git+https://github.com/silentFred/praating-ai.git
 ```
 
-### 3. Run
+### 3. Setup your push-to-talk button
+
+```bash
+praating --setup
+```
+
+This detects your mouse button and saves the config.
+
+### 4. Run
 
 ```bash
 praating
@@ -37,20 +45,24 @@ praating
 
 First run downloads the Whisper model (~3GB for large-v3). Subsequent starts are fast.
 
-> **Note:** For GPU acceleration, use the wrapper script which sets up CUDA library paths:
-> ```bash
-> ./run.sh
-> ```
-
 ## Usage
 
-**Hold your mouse button (default: button9) while speaking, release to transcribe.**
+**Hold your configured mouse button while speaking, release to transcribe.**
 
 Text is typed wherever your cursor is focused.
 
+## Commands
+
+```bash
+praating              # Start dictation
+praating --setup      # Interactive button setup
+praating --config     # Show current settings
+praating --set KEY=VALUE  # Change a setting (e.g., --set model_size=medium)
+```
+
 ## Configuration
 
-Create `~/.config/praating-ai/config.yaml` to customize:
+Config is stored at `~/.config/praating-ai/config.yaml`:
 
 ```yaml
 # Input settings
@@ -79,9 +91,7 @@ capitalize_first: true      # Capitalize first letter of transcription
 ### Finding your mouse button
 
 ```bash
-python3 -c "from pynput import mouse
-print('Click your button...')
-with mouse.Listener(on_click=lambda x,y,b,p: print(b) or not p) as l: l.join()"
+praating --setup
 ```
 
 ## Requirements
@@ -110,4 +120,4 @@ Make sure CUDA libraries are loaded. Use `./run.sh` or set `LD_LIBRARY_PATH` to 
 - For Wayland, you'd need to use `ydotool` or `wtype` instead
 
 ### Wrong mouse button
-Use the detection snippet above to find your button, then update `mouse_button` in your config.
+Run `praating --setup` to detect and configure your button.

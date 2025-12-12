@@ -336,12 +336,143 @@ class Dictation:
                 sd.sleep(100)
 
 
-def main():
+def detect_button():
+    """Interactive button detection for setup."""
+    print("Click the mouse button you want to use for push-to-talk...")
+    print("(Press Ctrl+C to cancel)\n")
+
+    detected_button = None
+
+    def on_click(x, y, button, pressed):
+        nonlocal detected_button
+        if pressed and button not in (mouse.Button.left, mouse.Button.right):
+            detected_button = button
+            return False  # Stop listener
+        elif pressed:
+            print(f"  {button.name} - try a different button (left/right are reserved)")
+
     try:
-        dictation = Dictation()
-        dictation.run()
+        with mouse.Listener(on_click=on_click) as listener:
+            listener.join()
     except KeyboardInterrupt:
-        print("\nExiting...")
+        print("\nCancelled.")
+        return None
+
+    return detected_button
+
+
+def save_config(settings):
+    """Save settings to user config file."""
+    USER_CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Load existing config or start fresh
+    if USER_CONFIG_FILE.exists():
+        with open(USER_CONFIG_FILE) as f:
+            current = yaml.safe_load(f) or {}
+    else:
+        current = {}
+
+    current.update(settings)
+
+    with open(USER_CONFIG_FILE, 'w') as f:
+        yaml.dump(current, f, default_flow_style=False)
+
+    return USER_CONFIG_FILE
+
+
+def show_config():
+    """Display current configuration."""
+    print("Current configuration:\n")
+
+    config_file = USER_CONFIG_FILE if USER_CONFIG_FILE.exists() else DEFAULT_CONFIG_FILE
+    print(f"Config file: {config_file}\n")
+
+    for key, value in config.items():
+        print(f"  {key}: {value}")
+    print()
+
+
+def run_setup():
+    """Interactive setup wizard."""
+    print("Praating-AI Setup")
+    print("=" * 40)
+    print()
+
+    # Detect button
+    button = detect_button()
+    if button is None:
+        return
+
+    button_name = button.name
+    print(f"\nDetected: {button_name}")
+
+    # Confirm
+    response = input("\nUse this button for push-to-talk? [Y/n] ").strip().lower()
+    if response in ('n', 'no'):
+        print("Setup cancelled.")
+        return
+
+    # Save config
+    config_path = save_config({"mouse_button": button_name})
+    print(f"\nConfig saved to {config_path}")
+    print("\nRun 'praating' to start dictating!")
+
+
+def main():
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Push-to-talk voice dictation using Whisper AI"
+    )
+    parser.add_argument(
+        "--setup",
+        action="store_true",
+        help="Interactive setup to configure your push-to-talk button"
+    )
+    parser.add_argument(
+        "--config",
+        action="store_true",
+        help="Show current configuration"
+    )
+    parser.add_argument(
+        "--set",
+        metavar="KEY=VALUE",
+        help="Set a config value (e.g., --set mouse_button=button8)"
+    )
+
+    args = parser.parse_args()
+
+    if args.setup:
+        run_setup()
+    elif args.config:
+        show_config()
+    elif args.set:
+        if '=' not in args.set:
+            print("Error: Use format --set KEY=VALUE")
+            return
+        key, value = args.set.split('=', 1)
+        # Convert value types
+        if value.lower() == 'true':
+            value = True
+        elif value.lower() == 'false':
+            value = False
+        elif value.isdigit():
+            value = int(value)
+        else:
+            try:
+                value = float(value)
+            except ValueError:
+                pass  # Keep as string
+
+        save_config({key: value})
+        print(f"Set {key}={value}")
+        print(f"Config saved to {USER_CONFIG_FILE}")
+    else:
+        try:
+            dictation = Dictation()
+            dictation.run()
+        except KeyboardInterrupt:
+            print("\nExiting...")
 
 
 if __name__ == "__main__":
