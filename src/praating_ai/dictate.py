@@ -427,7 +427,12 @@ def main():
     parser.add_argument(
         "--setup",
         action="store_true",
-        help="Interactive setup to configure your push-to-talk button"
+        help="Interactive CLI setup to configure your push-to-talk button"
+    )
+    parser.add_argument(
+        "--setup-gui",
+        action="store_true",
+        help="Launch graphical setup wizard"
     )
     parser.add_argument(
         "--config",
@@ -442,7 +447,10 @@ def main():
 
     args = parser.parse_args()
 
-    if args.setup:
+    if args.setup_gui:
+        from praating_ai.setup_gui import main as gui_main
+        gui_main()
+    elif args.setup:
         run_setup()
     elif args.config:
         show_config()

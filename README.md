@@ -55,7 +55,8 @@ Text is typed wherever your cursor is focused.
 
 ```bash
 praating              # Start dictation
-praating --setup      # Interactive button setup
+praating --setup      # Interactive CLI button setup
+praating --setup-gui  # Graphical setup wizard
 praating --config     # Show current settings
 praating --set KEY=VALUE  # Change a setting (e.g., --set model_size=medium)
 ```
