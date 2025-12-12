@@ -1,0 +1,7 @@
+faster-whisper
+sounddevice
+numpy
+pynput
+pyyaml
+nvidia-cudnn-cu12
+nvidia-cublas-cu12
